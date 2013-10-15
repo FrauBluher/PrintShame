@@ -2,6 +2,7 @@
 #Gets and updates new stuff
 
 import urllib.parse, urllib.request, datetime
+import http.cookiejar, urllib.request, string
 
 #Get current time information.
 Now = datetime.datetime.now()
@@ -34,13 +35,26 @@ else:
 Yesterday = str(month) + '/' + str(day) + '/' + str(year)
 
 #POST and GET http header construction and tx/rx.
-data = urllib.parse.urlencode({'start_date': '10/10/2013', 'end_date': '10/11/2013'oki2571uq40e0qqj89hjsm21i5, 'op': 'Update+Report', 'form_build_id': 'form-6d1805fb97b55213757da392f93264c0', 'form_id': 'soe_printing_user'})
+cj = http.cookiejar.CookieJar()
+opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+r = opener.open("https://support.soe.ucsc.edu/printing-reports/user")
+
+#Debugging output
+#for cookie in cj:
+#	print(cookie)
+#	cookieheader = {'cookie':cookie.name + "=" + cookie.value}
+#print(cookieheader)
+
+#Looking for the following string name="form_build_id"
+firstform = r.read().decode('utf-8')
+index = firstform.index('form_build_id')
+id = firstform[index+19:index+56]
+#print(id)
+
+data = urllib.parse.urlencode({'start_date': Yesterday, 'end_date': Today, 'op': 'Update+Report', 'form_build_id': id, 'form_id': 'soe_printing_user'})
 data = data.encode('utf-8')
 
-request = urllib.request.Request("https://support.soe.ucsc.edu/printing-reports/user")
-request.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
-
-f = urllib.request.urlopen(request, data)
+f = opener.open("https://support.soe.ucsc.edu/printing-reports/user", data)
 print(f.read().decode('utf-8'))
 
 #Todo, scrape session ID from initial get, and then send that and the cookie in a new header to get the timespan that I need.
