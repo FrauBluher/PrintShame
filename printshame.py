@@ -13,7 +13,7 @@ class PrintShame:
     def __init__(self):
         self.Now = datetime.datetime.now()
         self.cj = http.cookiejar.CookieJar()
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cj))
 
 
     def today(self):
@@ -46,42 +46,45 @@ class PrintShame:
         return(str(month) + '/' + str(day) + '/' + str(year))
 
     def get_printers_list(self):
-        cj = http.cookiejar.CookieJar()
-        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-        r = opener.open("https://support.soe.ucsc.edu/printing-reports/user")
+        first_form_raw = self.opener.open("https://support.soe.ucsc.edu/printing-reports/user")
 
         #Looking for the following string name="form_build_id"
-        firstform = r.read().decode('utf-8')
-        index = firstform.index('form_build_id')
-        id = firstform[index+19:index+56]
+        first_form = first_form_raw.read().decode('utf-8')
+        index = first_form.index('form_build_id')
+        id = first_form[index+19:index+56]
 
         #Header data construction.
-        data = urllib.parse.urlencode({'start_date': self.yesterday(), 'end_date': self.today(), 'op': 'Update+Report', 'form_build_id': id, 'form_id': 'soe_printing_user'})
+        data = urllib.parse.urlencode({
+                'start_date': self.yesterday(), 'end_date': self.today(),
+                'op': 'Update+Report', 'form_build_id': id, 'form_id': 'soe_printing_user'
+                })
         data = data.encode('utf-8')
 
         #Get user reports from Today to Yesterday.
-        f = opener.open("https://support.soe.ucsc.edu/printing-reports/user", data)
+        second_form_raw = self.opener.open("https://support.soe.ucsc.edu/printing-reports/user", data)
 
         #Decode, find the user info, and extract it.
-        secondform = f.read().decode('utf-8')
-        index2 = firstform.index('odd')
-        topten = secondform[index2:index2+2700]
-        m = re.findall(r'((?<=\">|g>)[A-z0-9():\s\-\.\,\í]*(?=\</.))', topten)
-        return(m)
+        second_form = second_form_raw.read().decode('utf-8')
+        index2 = first_form.index('odd')
+        
+        #RegEx Voodoo starts here.
+        top_ten = second_form[index2:index2+2700]
+        raw_printers = re.findall(r'((?<=\">|g>)[A-z0-9():\s\-\.\,\í]*(?=\</.))', top_ten)
+        return(raw_printers)
 
 def main():
     ps = PrintShame()
 
-    outputString = "TOP FIVE SOE PRINTERS LAST 24 HRs...\n "
+    output_string = "TOP FIVE SOE PRINTERS LAST 24 HRs...\n "
 
-    printersList = PrintShame.get_printers_list()
+    printers_list = PrintShame.get_printers_list(ps)
     i = 0
     for j in range(5):
-        outputString += printersList[i] + "    Pages:" + printersList[i+1] + "\n"
+        output_string += printers_list[i] + "    Pages:" + printers_list[i+1] + "\n"
         i += 3
 
-    print(outputString)
+    print(output_string)
 
-if __name__==__"main"__:
+if __name__=='__main__':
     main()
 
