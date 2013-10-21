@@ -61,7 +61,7 @@ index = firstform.index('form_build_id')
 id = firstform[index+19:index+56]
 
 #Header data construction.
-data = urllib.parse.urlencode({'start_date': Yesterday, 'end_date': Today, 'op': 'Update+Report', 'form_build_id': id, 'form_id': 'soe_printing_user'})
+data = urllib.parse.urlencode({'start_date': '10/16/2013', 'end_date': Today, 'op': 'Update+Report', 'form_build_id': id, 'form_id': 'soe_printing_user'})
 data = data.encode('utf-8')
 
 #Get user reports from Today to Yesterday.
@@ -71,11 +71,18 @@ f = opener.open("https://support.soe.ucsc.edu/printing-reports/user", data)
 secondform = f.read().decode('utf-8')
 index2 = firstform.index('odd')
 topten = secondform[index2:index2+2700]
-m = re.findall(r'((?<=\">|g>)[A-z0-9():\s\-\.\,]*(?=\</.))', topten)
+m = re.findall(r'((?<=\">|g>)[A-z0-9():\s\-\.\,\í]*(?=\</.))', topten)
 
-print(m)
-#for i in range(len(m)-3):
-#	make_printer(m[i], m[i+1], m[i+2])
+#print(topten)
+
+Output_String = "TOP FIVE SOE PRINTERS LAST 24 HRs...\r\n "
+i = 0
+#print(m)
+for j in range(5):
+	Output_String += m[i] + "    Pages:" + m[i+1] + "\r\n"
+	i += 3
+
+print(Output_String)
 
 
 #Todo, scrape session ID from initial get, and then send that and the cookie in a new header to get the timespan that I need.
