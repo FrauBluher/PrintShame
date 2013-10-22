@@ -9,7 +9,6 @@ __copyright__ ="Copyright (C) 2013 Pavlo Manovi"
 __license__ = "The MIT License (MIT)"
 
 class PrintShame:
-#HI ARI!
     def __init__(self):
         self.Now = datetime.datetime.now()
         self.cj = http.cookiejar.CookieJar()
